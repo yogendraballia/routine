@@ -1,88 +1,80 @@
-const canvas = document.getElementById('coloring-canvas');
-const ctx = canvas.getContext('2d');
-const colorPicker = document.getElementById('color-picker');
-const brushSize = document.getElementById('brush-size');
-const canvasContainer = document.getElementById('canvas-container');
+let brushColor = '#ff0000';
+let brushSize = 10;
+let painting = false;
 
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-let currentColor = colorPicker.value;
-let currentSize = brushSize.value;
+function loadPage(theme) {
+    const canvasContainer = document.getElementById('canvas-container');
+    const canvas = document.getElementById('coloring-canvas');
+    const ctx = canvas.getContext('2d');
 
-// Update brush settings
-colorPicker.addEventListener('change', () => {
-    currentColor = colorPicker.value;
-});
+    // Set canvas dimensions for mobile
+    canvas.width = Math.min(window.innerWidth - 20, 600);
+    canvas.height = canvas.width;
 
-brushSize.addEventListener('change', () => {
-    currentSize = brushSize.value;
-});
-
-// Drawing functions
-function startDrawing(e) {
-    isDrawing = true;
-    const { x, y } = getCanvasCoordinates(e);
-    lastX = x;
-    lastY = y;
-}
-
-function stopDrawing() {
-    isDrawing = false;
-    ctx.beginPath();
-}
-
-function draw(e) {
-    if (!isDrawing) return;
-
-    const { x, y } = getCanvasCoordinates(e);
-
-    ctx.lineWidth = currentSize;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = currentColor;
-
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-
-    lastX = x;
-    lastY = y;
-}
-
-function getCanvasCoordinates(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    return { x, y };
-}
-
-// Attach event listeners
-canvas.addEventListener('mousedown', startDrawing);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseup', stopDrawing);
-canvas.addEventListener('mouseout', stopDrawing);
-
-// For touch devices
-canvas.addEventListener('touchstart', startDrawing);
-canvas.addEventListener('touchmove', draw);
-canvas.addEventListener('touchend', stopDrawing);
-
-// Load a coloring page outline
-function loadPage(pageName) {
+    // Clear canvas and load image
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     const img = new Image();
-    img.src = `${pageName}-outline.png`; // Ensure the files match the naming convention
-    img.onload = () => {
-        canvasContainer.style.display = 'block';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    img.src = `${theme}-outline.png`;
+    img.onload = function () {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvasContainer.style.display = 'block';
+        enableColoring(canvas, ctx);
     };
 }
 
-// Print the coloring page
+function enableColoring(canvas, ctx) {
+    const colorPicker = document.getElementById('color-picker');
+    const brushSizeInput = document.getElementById('brush-size');
+
+    // Update brush settings
+    colorPicker.addEventListener('input', (e) => (brushColor = e.target.value));
+    brushSizeInput.addEventListener('input', (e) => (brushSize = e.target.value));
+
+    const startPainting = (x, y) => {
+        painting = true;
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = brushSize;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    };
+
+    const paint = (x, y) => {
+        if (!painting) return;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    };
+
+    const stopPainting = () => {
+        painting = false;
+        ctx.closePath();
+    };
+
+    // Event listeners for desktop and touch
+    canvas.addEventListener('mousedown', (e) => startPainting(e.offsetX, e.offsetY));
+    canvas.addEventListener('mousemove', (e) => paint(e.offsetX, e.offsetY));
+    canvas.addEventListener('mouseup', stopPainting);
+    canvas.addEventListener('mouseleave', stopPainting);
+
+    canvas.addEventListener('touchstart', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        startPainting(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        paint(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    canvas.addEventListener('touchend', stopPainting);
+}
+
 function printPage() {
-    const dataUrl = canvas.toDataURL('image/png');
-    const printWindow = window.open('');
-    printWindow.document.write(`<img src="${dataUrl}" style="width:100%;">`);
+    const canvas = document.getElementById('coloring-canvas');
+    const dataURL = canvas.toDataURL();
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`<img src="${dataURL}" style="width:100%;"/>`);
     printWindow.print();
 }
