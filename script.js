@@ -1,73 +1,88 @@
-let brushColor = '#ff0000'; // Default brush color
-let brushSize = 5; // Default brush size
-let painting = false;
+const canvas = document.getElementById('coloring-canvas');
+const ctx = canvas.getContext('2d');
+const colorPicker = document.getElementById('color-picker');
+const brushSize = document.getElementById('brush-size');
+const canvasContainer = document.getElementById('canvas-container');
 
-function loadPage(theme) {
-    const canvasContainer = document.getElementById('canvas-container');
-    const canvas = document.getElementById('coloring-canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+let currentColor = colorPicker.value;
+let currentSize = brushSize.value;
 
-    // Load the selected coloring page image
+// Update brush settings
+colorPicker.addEventListener('change', () => {
+    currentColor = colorPicker.value;
+});
+
+brushSize.addEventListener('change', () => {
+    currentSize = brushSize.value;
+});
+
+// Drawing functions
+function startDrawing(e) {
+    isDrawing = true;
+    const { x, y } = getCanvasCoordinates(e);
+    lastX = x;
+    lastY = y;
+}
+
+function stopDrawing() {
+    isDrawing = false;
+    ctx.beginPath();
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+
+    const { x, y } = getCanvasCoordinates(e);
+
+    ctx.lineWidth = currentSize;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = currentColor;
+
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    lastX = x;
+    lastY = y;
+}
+
+function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return { x, y };
+}
+
+// Attach event listeners
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mouseout', stopDrawing);
+
+// For touch devices
+canvas.addEventListener('touchstart', startDrawing);
+canvas.addEventListener('touchmove', draw);
+canvas.addEventListener('touchend', stopDrawing);
+
+// Load a coloring page outline
+function loadPage(pageName) {
     const img = new Image();
-    img.src = `${theme}-outline.png`; // Assuming the image names are 'nature-outline.png' and 'space-outline.png'
-    
-    img.onload = function() {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    img.src = `${pageName}-outline.png`; // Ensure the files match the naming convention
+    img.onload = () => {
         canvasContainer.style.display = 'block';
-        enableColoring();
-    }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
 }
 
-function enableColoring() {
-    const canvas = document.getElementById('coloring-canvas');
-    const ctx = canvas.getContext('2d');
-
-    // Update brush color and size based on user selection
-    const colorPicker = document.getElementById('color-picker');
-    const brushSizeSelector = document.getElementById('brush-size');
-
-    colorPicker.addEventListener('input', (e) => {
-        brushColor = e.target.value;
-    });
-
-    brushSizeSelector.addEventListener('change', (e) => {
-        brushSize = e.target.value;
-    });
-
-    // Mouse events
-    canvas.addEventListener('mousedown', (e) => {
-        painting = true;
-        ctx.strokeStyle = brushColor; // Set stroke color to selected color
-        ctx.lineWidth = brushSize; // Set line width to selected size
-        ctx.beginPath();
-        ctx.moveTo(e.offsetX, e.offsetY);
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-        if (!painting) return;
-        ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.stroke();
-    });
-
-    canvas.addEventListener('mouseup', () => {
-        painting = false;
-        ctx.closePath();
-    });
-
-    canvas.addEventListener('mouseleave', () => {
-        painting = false;
-        ctx.closePath();
-    });
-}
-
+// Print the coloring page
 function printPage() {
-    const canvas = document.getElementById('coloring-canvas');
-    const dataURL = canvas.toDataURL();
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<img src="' + dataURL + '" style="width:100%;height:auto;"/>');
-    printWindow.document.close();
+    const dataUrl = canvas.toDataURL('image/png');
+    const printWindow = window.open('');
+    printWindow.document.write(`<img src="${dataUrl}" style="width:100%;">`);
     printWindow.print();
 }
