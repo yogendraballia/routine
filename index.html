@@ -7,10 +7,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
 <div class="container">
-<h3><p align="center"> <a href="daily_routine.html">My Daily Routine</a> &nbsp; &nbsp; &nbsp; <a href="index.html">Coloring Pages</a>   </p></h3>
     <h1>Coloring Pages Designed with ❤️ for students with BM PUBLIC SCHOOL</h1>
+	<h3><p align="center"> <a href="daily_routine.html">My Daily Routine</a></p></h3>
     <p>Select a coloring page to start coloring!</p>
     
     <div class="coloring-options">
@@ -22,39 +21,27 @@
             <img src="space-outline.png" alt="Space Coloring Page">
             <p>Space</p>
         </div>
-		 <div class="coloring-page" onclick="loadPage('lion')">
+        <div class="coloring-page" onclick="loadPage('lion')">
             <img src="lion-outline.png" alt="Lion Coloring Page">
             <p>Lion</p>
         </div>
-		<div class="coloring-page" onclick="loadPage('peacock')">
+        <div class="coloring-page" onclick="loadPage('peacock')">
             <img src="peacock-outline.png" alt="Peacock Coloring Page">
             <p>Peacock</p>
         </div>
-		</div>
-       
     </div>
-    
+
     <div class="canvas-container" id="canvas-container" style="display:none;">
-        <canvas id="coloring-canvas" width="500" height="500"></canvas>
+        <canvas id="coloring-canvas"></canvas>
         <div class="controls">
-            <label for="color-picker">Choose Color:</label>
             <input type="color" id="color-picker" value="#ff0000">
-            
-            <label for="brush-size">Brush Size:</label>
-            <select id="brush-size">
-                <option value="5">Small</option>
-                <option value="10">Medium</option>
-                <option value="15">Large</option>
-            </select>
+            <label for="brush-size">Size:</label>
+            <input type="range" id="brush-size" min="5" max="30" value="10">
         </div>
-        <button class="button" id="print-button" onclick="printPage()">Print Coloring Page</button>
+        <button class="button" onclick="printPage()">Print</button>
     </div>
 </div>
 
 <script src="script.js"></script>
-
-<footer>
-        <p>© 2024 Coloring Pages. Designed with ❤️ for students. <a href="daily_routine.html">Learn More about My Daily Routine</a></p>
-    </footer>
 </body>
 </html>
